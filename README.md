@@ -26,7 +26,10 @@ install cmake
 
 ## Intro
 pb
-```cpp
+
+```
+cd bin/RelWithDebInfo
+./lua ../script/test.lua
 ```
 ## Contacts
 [![Join the chat](https://badges.gitter.im/brinkqiang/pb/Lobby.svg)](https://gitter.im/brinkqiang/pb)
