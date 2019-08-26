@@ -75,7 +75,10 @@ script:
   - popd
 
 after_success:
-  - echo success
+  - pushd bin/relwithdebinfo
+  - ./lua ../script/test.lua
+  - popd
+
 
 after_failure:
   - echo failure
