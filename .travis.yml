@@ -24,14 +24,14 @@ matrix:
               sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-5.0']
               packages: ['cmake', 'autoconf', 'automake', 'gcc-7', 'g++-7', 'clang-5.0']
 
-      #-   os: osx
-      #    compiler: gcc
-      #    env: 
-      #      - BUILD_TYPE=relwithdebinfo
-      #    addons:
-      #      apt:
-      #        sources: 
-      #        packages: ['cmake', 'autoconf', 'automake', 'gcc-7', 'g++-7', 'clang-5.0']
+      -   os: osx
+          compiler: gcc
+          env: 
+            - BUILD_TYPE=relwithdebinfo
+          addons:
+            apt:
+              sources: 
+              packages: ['cmake', 'autoconf', 'automake', 'gcc-7', 'g++-7', 'clang-5.0']
 
 install:
   - cmake --version
