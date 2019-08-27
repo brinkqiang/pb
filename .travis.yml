@@ -76,8 +76,9 @@ script:
 
 after_success:
   - pushd bin/relwithdebinfo
-  - ./lua ../script/test.lua
-  - popd
+    ls -al
+    ./lua ../script/test.lua
+    popd
 
 
 after_failure:
