@@ -22,7 +22,7 @@ Copyright (c) 2013-2018 brinkqiang (brink.qiang@gmail.com)
 [win-link]:  https://ci.appveyor.com/project/brinkqiang/pb "AppVeyor build status"
 
 ## env
-install cmake
+install cmake 3.2+
 
 [![cmake](https://img.shields.io/badge/cmake-down-blue.svg?style=flat-square)](https://cmake.org/download/)
 
