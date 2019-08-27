@@ -27,10 +27,20 @@ install cmake
 ## Intro
 pb
 
+win
 ```
-cd bin/RelWithDebInfo
+build.bat
+cd bin/relwithdebinfo
 ./lua ../script/test.lua
 ```
+
+linux
+```
+bash build.sh
+cd bin/relwithdebinfo
+./lua ../script/test.lua
+```
+
 ## Contacts
 [![Join the chat](https://badges.gitter.im/brinkqiang/pb/Lobby.svg)](https://gitter.im/brinkqiang/pb)
 
