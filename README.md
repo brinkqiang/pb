@@ -24,7 +24,7 @@ Copyright (c) 2013-2018 brinkqiang (brink.qiang@gmail.com)
 ## env
 install cmake
 
-[![cmake](https://img.shields.io/badge/cmake.svg?style=flat-square)](https://cmake.org)
+[![cmake](https://img.shields.io/badge/brinkqiang-cmake.svg?style=flat-square)](https://cmake.org)
 
 
 ## Intro
