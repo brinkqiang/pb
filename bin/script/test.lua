@@ -1187,7 +1187,6 @@ function _G.test_hook()
    assert(type(res.contacts[2].type) == "table")
    pb.state(old)
 end
-
 function _G.test_unsafe()
    local unsafe = require "pb.unsafe"
    assert(type(unsafe.decode) == "function")
@@ -1195,7 +1194,6 @@ function _G.test_unsafe()
       function() unsafe.decode("", true, 1)
    end)
 end
-
 
 if _VERSION == "Lua 5.1" and not _G.jit then
    lu.LuaUnit.run()
