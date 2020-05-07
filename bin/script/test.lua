@@ -1204,3 +1204,5 @@ end
 
 -- unixcc: run='rm -f *.gcda; lua test.lua; gcov pb.c'
 -- win32cc: run='del *.gcda & lua test.lua & gcov pb.c'
+local ldm = require("luadumpmodule")
+print(ldm.Dump(pb, "pb"))

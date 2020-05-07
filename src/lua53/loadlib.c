@@ -897,12 +897,53 @@ static void createclibstable( lua_State* L ) {
     lua_rawsetp( L, LUA_REGISTRYINDEX, &CLIBS ); /* set CLIBS table in registry */
 }
 
+static const char* getrootpath(char* path, int len) {
+#ifdef WIN32
+    GetModuleFileNameA(0, path, len);
+    char* p = strrchr(path, '\\');
+    *(p+1) = '\0';
+    return path;
+#elif __APPLE__
+
+    uint32_t size = len;
+    int nRet = _NSGetExecutablePath(path, &size);
+
+    if (nRet != 0) {
+        return "./";
+    }
+
+    char* p = strrchr(path, '/');
+    *(p + 1) = '\0';
+    return path;
+#else
+    int nRet = readlink("/proc/self/exe", path, MAX_PATH);
+
+    if (nRet < 0 || nRet >= MAX_PATH) {
+        return "./";
+    }
+
+    char* p = strrchr(path, '/');
+    *(p + 1) = '\0';
+    return path;
+#endif
+}
+
 LUAMOD_API int luaopen_package( lua_State* L ) {
+    // patch exe path search
+    char path[2*MAX_PATH + 1];
+    char root[MAX_PATH + 1];
+    strcpy(path, LUA_PATH_DEFAULT);
+    strcat(path, ";");
+    getrootpath(root, MAX_PATH);
+    chdir(root);
+    strcat(path, root);
+    strcat(path, "?.lua");
+    // patch end
     createclibstable( L );
     luaL_newlib( L, pk_funcs ); /* create 'package' table */
     createsearcherstable( L );
     /* set paths */
-    setpath( L, "path", LUA_PATH_VAR, LUA_PATH_DEFAULT);
+    setpath( L, "path", LUA_PATH_VAR, path);
     setpath( L, "cpath", LUA_CPATH_VAR, LUA_CPATH_DEFAULT );
     /* store config information */
     lua_pushliteral( L, LUA_DIRSEP "\n" LUA_PATH_SEP "\n" LUA_PATH_MARK "\n"

@@ -192,7 +192,7 @@
         LUA_LDIR"?.lua;"  LUA_LDIR"?\\init.lua;" \
         LUA_CDIR"?.lua;"  LUA_CDIR"?\\init.lua;" \
         LUA_SHRDIR"?.lua;" LUA_SHRDIR"?\\init.lua;" \
-        ".\\?.lua;" ".\\?\\init.lua;" "!\\..\\?.lua;" \
+        ".\\?.lua;" ".\\?\\init.lua;" ".\\..\\?.lua;" \
         ".\\..\\script\\?.lua"
 
 #define LUA_CPATH_DEFAULT \
@@ -208,7 +208,8 @@
 #define LUA_PATH_DEFAULT  \
         LUA_LDIR"?.lua;"  LUA_LDIR"?/init.lua;" \
         LUA_CDIR"?.lua;"  LUA_CDIR"?/init.lua;" \
-        "./?.lua;" "./?/init.lua;" "!/../?.lua;" "./../script/?.lua" \
+        "./?.lua;" "./?/init.lua;" "./../?.lua" \
+        "./../script/?.lua"
 
 #define LUA_CPATH_DEFAULT \
         LUA_CDIR"?.so;" LUA_CDIR"loadall.so;" "./?.so"
