@@ -1,0 +1,110 @@
+{
+    "packagePath": "./?.lua,./?/init.lua",
+    "global": {
+        "type": "table",
+        "fields": {
+            "pb": {
+                "link": "",
+                "description": "",
+                "type": "table",
+                "fields": {
+                    "hook": {
+                        "link": "",
+                        "description": "",
+                        "type": "function"
+                    },
+                    "clear": {
+                        "link": "",
+                        "description": "",
+                        "type": "function"
+                    },
+                    "pack": {
+                        "link": "",
+                        "description": "",
+                        "type": "function"
+                    },
+                    "fields": {
+                        "link": "",
+                        "description": "",
+                        "type": "function"
+                    },
+                    "field": {
+                        "link": "",
+                        "description": "",
+                        "type": "function"
+                    },
+                    "load": {
+                        "link": "",
+                        "description": "",
+                        "type": "function"
+                    },
+                    "type": {
+                        "link": "",
+                        "description": "",
+                        "type": "function"
+                    },
+                    "option": {
+                        "link": "",
+                        "description": "",
+                        "type": "function"
+                    },
+                    "result": {
+                        "link": "",
+                        "description": "",
+                        "type": "function"
+                    },
+                    "types": {
+                        "link": "",
+                        "description": "",
+                        "type": "function"
+                    },
+                    "tohex": {
+                        "link": "",
+                        "description": "",
+                        "type": "function"
+                    },
+                    "defaults": {
+                        "link": "",
+                        "description": "",
+                        "type": "function"
+                    },
+                    "enum": {
+                        "link": "",
+                        "description": "",
+                        "type": "function"
+                    },
+                    "typefmt": {
+                        "link": "",
+                        "description": "",
+                        "type": "function"
+                    },
+                    "encode": {
+                        "link": "",
+                        "description": "",
+                        "type": "function"
+                    },
+                    "unpack": {
+                        "link": "",
+                        "description": "",
+                        "type": "function"
+                    },
+                    "state": {
+                        "link": "",
+                        "description": "",
+                        "type": "function"
+                    },
+                    "decode": {
+                        "link": "",
+                        "description": "",
+                        "type": "function"
+                    },
+                    "loadfile": {
+                        "link": "",
+                        "description": "",
+                        "type": "function"
+                    }
+                }
+            }
+        }
+    }
+}
