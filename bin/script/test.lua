@@ -1196,6 +1196,7 @@ function _G.test_unsafe()
    end)
 end
 
+
 if _VERSION == "Lua 5.1" and not _G.jit then
    lu.LuaUnit.run()
 else
@@ -1204,5 +1205,4 @@ end
 
 -- unixcc: run='rm -f *.gcda; lua test.lua; gcov pb.c'
 -- win32cc: run='del *.gcda & lua test.lua & gcov pb.c'
-local ldm = require("luadumpmodule")
-print(ldm.Dump(pb, "pb"))
+

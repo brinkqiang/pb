@@ -5,6 +5,7 @@ PROJECT(pb)
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 INCLUDE(cmake/ModuleImport.cmake)
 INCLUDE(cmake/ModuleCompileOptions.cmake)
+INCLUDE(cmake/LuaModule.cmake)
 ModuleSetCompileOptions()
 
 SET(PB_VERSION_MAJOR "1")
