@@ -28,6 +28,8 @@ install cmake 3.2+
 
 
 ## Intro
+The customized version of lua-protobuf cmake linux & mac & win is compiled, and the new version can directly replace pb.c and pb.h under src (https://github.com/starwing/lua-protobuf)
+
 pb
 
 win
