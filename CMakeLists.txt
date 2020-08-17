@@ -7,6 +7,7 @@ INCLUDE(cmake/ModuleImport.cmake)
 INCLUDE(cmake/ModuleCompileOptions.cmake)
 INCLUDE(cmake/LuaModule.cmake)
 ModuleSetCompileOptions()
+ModuleSetWinCompilerFlags()
 
 SET(PB_VERSION_MAJOR "1")
 SET(PB_VERSION_MINOR "0")
@@ -33,4 +34,4 @@ MESSAGE(STATUS "VERSION: ${LUADUMPMODULE_VERSION}")
 ADD_DEFINITIONS(-DUSE_LUADUMPMODULE)
 ADD_DEFINITIONS(-DLUA_COMPAT_MODULE -DLUA_COMPAT_APIINTCASTS)
 
-LuaModuleImport("${LUA_MODULE}" "pb" "src/pb")
+LuaModuleImport("${LUA_MODULE}" "pb" "src/pb" "")

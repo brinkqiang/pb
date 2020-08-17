@@ -59,6 +59,7 @@ macro(ModuleImport ModuleName ModulePath)
     IF (DMLIBS_FOUND STREQUAL "-1")
         LIST(APPEND DMLIBS ${ModuleName})
         SET_PROPERTY(GLOBAL PROPERTY DMLIBS ${DMLIBS})
+
         MESSAGE(STATUS "LIST APPEND ${ModuleName} ${DMLIBS}" )
 
         IF (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${ModulePath}/CMakeLists.txt)
@@ -251,3 +252,66 @@ macro(ModuleImport2 ModuleName ModulePath)
 
     ModuleInclude2(${ModuleName} ${ModulePath})
 endmacro(ModuleImport2)
+
+macro(ModuleImportAll ModulePath)
+    MESSAGE(STATUS "ModuleImportAll ${ModulePath}")
+
+    IF (IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${ModulePath})
+        SUBDIRLIST(SUBDIRS ${CMAKE_CURRENT_SOURCE_DIR}/${ModulePath})
+        FOREACH(subdir ${SUBDIRS})
+            MESSAGE(STATUS "ModuleImportAll ${subdir} ${ModulePath}/${subdir}")
+
+            ModuleImport(${subdir} ${ModulePath}/${subdir})
+        ENDFOREACH()
+    ENDIF()
+endmacro(ModuleImportAll)
+
+macro(ModuleConfigure ModuleName ModulePath)
+    IF (WIN32)
+        ADD_CUSTOM_TARGET(
+            ${ModuleName}_configure
+            COMMAND echo "${ModuleName}_config"
+            WORKING_DIRECTORY ${ModulePath}
+            )
+    ELSEIF (APPLE)
+        ADD_CUSTOM_TARGET(
+            ${ModuleName}_configure
+            COMMAND glibtoolize && aclocal && autoheader && autoconf && automake --add-missing && sh configure
+            WORKING_DIRECTORY ${ModulePath}
+            )
+    ELSEIF (UNIX)
+        ADD_CUSTOM_TARGET(
+            ${ModuleName}_configure
+            COMMAND libtoolize && aclocal && autoheader && autoconf && automake --add-missing && sh configure
+            WORKING_DIRECTORY ${ModulePath}
+            )
+    ENDIF()
+
+    ADD_DEPENDENCIES(${ModuleName} ${ModuleName}_configure)
+endmacro(ModuleConfigure)
+
+macro(ModuleCommand ModuleName ModulePath CommandLine)
+    MESSAGE(STATUS "ModuleCommand ${ModuleName} ${ModulePath} ${CommandLine}")
+
+    IF (WIN32)
+        ADD_CUSTOM_TARGET(
+            ${ModuleName}_command
+            COMMAND ${CommandLine}
+            WORKING_DIRECTORY ${ModulePath}
+            )
+    ELSEIF (APPLE)
+        ADD_CUSTOM_TARGET(
+            ${ModuleName}_command
+            COMMAND ${CommandLine}
+            WORKING_DIRECTORY ${ModulePath}
+            )
+    ELSEIF (UNIX)
+        ADD_CUSTOM_TARGET(
+            ${ModuleName}_command
+            COMMAND ${CommandLine}
+            WORKING_DIRECTORY ${ModulePath}
+            )
+    ENDIF()
+
+    ADD_DEPENDENCIES(${ModuleName} ${ModuleName}_command)
+endmacro(ModuleCommand)
