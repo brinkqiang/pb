@@ -37,6 +37,13 @@ local function check_msg(name, data, r)
    eq(data2, r or data)
 end
 
+local function withstate(f)
+   local old = pb.state(nil)
+   local ok, res = pcall(f, old)
+   pb.state(old)
+   assert(ok, res)
+end
+
 _G.test_io = {} do
 
 function _G.test_io.setup()
@@ -565,6 +572,25 @@ function _G.test_packed()
       "MessageB", { messageValue = { { intValue = 1 } } })), "0A 02 08 01")
    pb.clear "MessageA"
    pb.clear "MessageB"
+
+   check_load [[
+      syntax="proto3";
+      message Message3
+      {
+          repeated int32 v1 = 1;
+      } ]]
+   check_load [[
+      message Message2
+      {
+          repeated int32 v1 = 1;
+      } ]]
+   local t = { v1 = {1,2,3,4,5} }
+   local bytes = pb.encode("Message2", t)
+   eq(pb.decode("Message3", bytes), t)
+   bytes = pb.encode("Message3", t)
+   eq(pb.decode("Message2", bytes), t)
+   pb.clear "Message2"
+   pb.clear "Message3"
    pb.option "auto_default_values"
    assert(pb.type ".google.protobuf.FileDescriptorSet")
 end
@@ -629,7 +655,7 @@ function _G.test_oneof()
    message TO_M3 {
        int32 value = 1;
    }
-   message TestOneof { 
+   message TestOneof {
        oneof body_oneof {
            TO_M1 m1 = 100;
            TO_M2 m2 = 200;
@@ -763,6 +789,8 @@ function _G.test_buffer()
    eq(buffer("foo", "bar"):result(), "foobar")
    eq(buffer.new("foo", "bar"):result(), "foobar")
 
+   eq(pb.fromhex"0123456789ABCDEF", "\1\35\69\103\137\171\205\239")
+
    local b = buffer.new()
    b:pack("b", true);       eq(b:tohex(-1), "01")
    b:pack("f", 0.125);      eq(b:tohex(-4), "00 00 00 3E")
@@ -789,6 +817,13 @@ function _G.test_buffer()
    assert(#b:reset() == 0)
    assert(tostring(b):match 'pb.Buffer')
 
+   b = buffer.new "foo"
+   assert(#b == 3)
+   b:delete()
+   assert(#b == 0)
+   b:pack("vvv", 1,2,3)
+   assert(#b == 3)
+
    b = buffer.new()
    eq(b:pack("(vvv)", 1,2,3):tohex(-4), "03 01 02 03")
    eq(b:pack("((vvv))", 1,2,3):tohex(-5), "04 03 01 02 03")
@@ -806,7 +841,7 @@ function _G.test_buffer()
    eq(#b, 6)
 
    fail("integer format error: 'foo'", function() pb.pack("v", "foo") end)
-   if _VERSION == "Lua 5.3" then
+   if _VERSION == "Lua 5.3" or _VERSION == "Lua 5.4" then
       fail("integer format error", function() pb.pack("v", 1e308) end)
    else
       fail("number has no integer representation", function() pb.pack("v", 1e308) end)
@@ -931,20 +966,20 @@ function _G.test_typefmt()
 
    local bytes = assert(pb.encode("Person", data))
    local s = require "pb.slice".new(bytes)
-   local function decode(type, s, data)
-      while #s > 0 do
-         local offset, tag = s:unpack"@v"
+   local function decode(type, str, d)
+      while #str > 0 do
+         local _, tag = str:unpack"@v"
          local name, _, pbtype = pb.field(type, math.floor(tag / 8))
          local fmt = pb.typefmt(pbtype)
          if fmt == "message" then
-            s:enter()
-            if data[name][1] then
-               decode(pbtype, s, data[name][1])
-               table.remove(data[name], 1)
+            str:enter()
+            if d[name][1] then
+               decode(pbtype, str, d[name][1])
+               table.remove(d[name], 1)
             end
-            s:leave()
+            str:leave()
          else
-            assert(data[name] == s:unpack(fmt))
+            assert(d[name] == str:unpack(fmt))
          end
       end
    end
@@ -997,8 +1032,7 @@ function _G.test_typefmt()
 end
 
 function _G.test_load()
-   do
-      local old = pb.state(nil)
+   withstate(function()
       protoc.reload()
       assert(protoc:load [[ message Test_Load1 { optional int32 t = 1; } ]])
       assert(pb.type "Test_Load1")
@@ -1010,10 +1044,9 @@ function _G.test_load()
       assert(pb.type "Test_Load1")
       assert(p:load [[ message Test_Load2 { optional int32 t = 2; } ]])
       assert(pb.type "Test_Load2")
-      pb.state(old)
-   end
+   end)
 
-   local old = pb.state(nil) -- discard previous one and save
+   withstate(function(old)
    assert(old.setdefault)
    eq(pb.type ".google.protobuf.FileDescriptorSet", nil)
    eq({pb.load "\16\255\255\1\10\2\18\3"}, {false, 8})
@@ -1049,7 +1082,7 @@ function _G.test_load()
             )
    eq(pb.load(buf:result()), true)
    fail("unknown type <unknown>", function() pb.encode("load_test", { test_unknown = 1 }) end)
-   fail("unknown type <unknown>", function() pb.decode("load_test", "\8\1") end)
+   fail("<unknown> expected for type <unknown>, got varint", function() pb.decode("load_test", "\8\1") end)
 
    buf:reset()
    buf:pack("v(v(vsv(vsvvvv)))",
@@ -1097,30 +1130,29 @@ function _G.test_load()
    buf:pack("v(v(vsv(vvvv)))",
             s(1), s(4), s(1), "load_test",
             s(2), v(3), 1, v(4), 1)
-   eq(pb.load(buf:result()), true)
+   eq(pb.load(buf:result()), false)
 
    buf:reset()
    buf:pack("v(v(vsv(vvvvvv)))",
             s(1), s(4), s(1), "load_test",
             s(2), v(3), 1, v(4), 1, v(5), 11)
-   eq(pb.load(buf:result()), true)
+   eq(pb.load(buf:result()), false)
 
    buf:reset()
    buf:pack("v(v(vsv(vvvv)))",
             s(1), s(4), s(1), "load_test",
             s(6), v(3), 1, v(4), 1)
-   eq(pb.load(buf:result()), true)
+   eq(pb.load(buf:result()), false)
 
    buf:reset()
    buf:pack("v(v(v(vx)))", s(1), s(4), s(6), v(3), -1)
    eq({pb.load(buf:result())}, { false, 8 })
-
-   pb.state(old)
+   end)
    assert(pb.type ".google.protobuf.FileDescriptorSet")
 end
 
 function _G.test_hook()
-   local old = pb.state(nil)
+   withstate(function()
    protoc.reload()
    check_load [[
       enum Type {
@@ -1149,8 +1181,8 @@ function _G.test_hook()
       local function helper(t)
          return func(name, t)
       end
-      local old = pb.hook(name, helper)
-      assert(fetch == old)
+      local oldh = pb.hook(name, helper)
+      assert(fetch == oldh)
       assert(pb.hook(name) == helper)
    end
    local s = {}
@@ -1185,14 +1217,18 @@ function _G.test_hook()
    assert(res.contacts[2].hooked)
    assert(type(res.contacts[1].type) == "table")
    assert(type(res.contacts[2].type) == "table")
-   pb.state(old)
+   end)
 end
+
 function _G.test_unsafe()
    local unsafe = require "pb.unsafe"
    assert(type(unsafe.decode) == "function")
+   assert(type(unsafe.use) == "function")
    fail("userdata expected, got boolean",
       function() unsafe.decode("", true, 1)
    end)
+   eq((unsafe.use "global"), true)
+   eq((unsafe.use "local"), true)
 end
 
 if _VERSION == "Lua 5.1" and not _G.jit then
@@ -1203,4 +1239,3 @@ end
 
 -- unixcc: run='rm -f *.gcda; lua test.lua; gcov pb.c'
 -- win32cc: run='del *.gcda & lua test.lua & gcov pb.c'
-
