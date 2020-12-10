@@ -22,7 +22,7 @@
 #include "pb_module.h"
 #include "pb.h"
 
-LUAMOD_API int require_pb(lua_State* L)
+LUALIB_API int require_pb(lua_State* L)
 {
     luaL_requiref(L, "pb", luaopen_pb, 0);
     printf("lua module: require pb\n");
