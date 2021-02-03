@@ -125,7 +125,7 @@ static int lua53_rawgetp(lua_State *L, int idx, const void *p)
 #define lpb_state(LS)    ((LS)->state)
 #define lpb_name(LS,s)   pb_name(lpb_state(LS), (s), &(LS)->cache)
 
-static pb_State *global_state = NULL;
+static const pb_State *global_state = NULL;
 static const char state_name[] = PB_STATE;
 
 enum lpb_Int64Mode { LPB_NUMBER, LPB_STRING, LPB_HEXSTRING };
@@ -164,7 +164,7 @@ static void lpb_pushhooktable(lua_State *L, lpb_State *LS)
 static int Lpb_delete(lua_State *L) {
     lpb_State *LS = (lpb_State*)luaL_testudata(L, 1, PB_STATE);
     if (LS != NULL) {
-        pb_State *GS = global_state;
+        const pb_State *GS = global_state;
         pb_free(&LS->local);
         if (&LS->local == GS)
             global_state = NULL;
@@ -1019,6 +1019,7 @@ static int Lslice_new(lua_State *L) {
     lua_settop(L, 3);
     s = (lpb_Slice*)lua_newuserdata(L, sizeof(lpb_Slice));
     lpb_initslice(L, 1, s, sizeof(lpb_Slice));
+    if (s->curr.p == NULL) s->curr = pb_lslice("", 0);
     luaL_setmetatable(L, PB_SLICE);
     return 1;
 }
@@ -1306,8 +1307,8 @@ static int Lpb_enum(lua_State *L) {
 }
 
 static int lpb_pushdefault(lua_State *L, lpb_State *LS, const pb_Field *f, int is_proto3) {
-    const pb_Type *type = f->type;
     int ret = 0;
+    const pb_Type *type;
     char *end;
     if (f == NULL) return 0;
     if (is_proto3 && f->repeated) { lua_newtable(L); return 1; }
@@ -1319,6 +1320,7 @@ static int lpb_pushdefault(lua_State *L, lpb_State *LS, const pb_Field *f, int i
             ret = 1, lua_pushliteral(L, "");
         break;
     case PB_Tenum:
+        if ((type = f ? f->type : NULL) == NULL) return 0;
         if ((f = pb_fname(type, f->default_value)) != NULL) {
             if (LS->enum_as_value)
                 ret = 1, lpb_pushinteger(L, f->number, LS->int64_mode);
@@ -1881,10 +1883,24 @@ static int Lpb_decode_unsafe(lua_State *L) {
     return lpb_decode(L, pb_lslice(data, size), 4);
 }
 
+static int Lpb_slice_unsafe(lua_State *L) {
+    const char *data = (const char *)lua_touserdata(L, 1);
+    size_t size = (size_t)luaL_checkinteger(L, 2);
+    if (data == NULL) typeerror(L, 1, "userdata");
+    return lpb_newslice(L, data, size);
+}
+
+static int Lpb_touserdata(lua_State *L) {
+    pb_Slice s = lpb_toslice(L, 1);
+    lua_pushlightuserdata(L, (void*)s.p);
+    lua_pushinteger(L, pb_len(s));
+    return 2;
+}
+
 static int Lpb_use(lua_State *L) {
     const char *opts[] = { "global", "local", NULL };
     lpb_State *LS = default_lstate(L);
-    pb_State *GS = global_state;
+    const pb_State *GS = global_state;
     switch (luaL_checkoption(L, 1, NULL, opts)) {
     case 0: if (GS) LS->state = GS; break;
     case 1: LS->state = &LS->local; break;
@@ -1895,8 +1911,10 @@ static int Lpb_use(lua_State *L) {
 
 LUALIB_API int luaopen_pb_unsafe(lua_State *L) {
     luaL_Reg libs[] = {
-        { "decode", Lpb_decode_unsafe },
-        { "use",    Lpb_use           },
+        { "decode",     Lpb_decode_unsafe },
+        { "slice",      Lpb_slice_unsafe  },
+        { "touserdata", Lpb_touserdata    },
+        { "use",        Lpb_use           },
         { NULL, NULL }
     };
     luaL_newlib(L, libs);
@@ -1908,5 +1926,5 @@ PB_NS_END
 
 /* cc: flags+='-O3 -ggdb -pedantic -std=c90 -Wall -Wextra --coverage'
  * maccc: flags+='-ggdb -shared -undefined dynamic_lookup' output='pb.so'
- * win32cc: flags+='-s -mdll -DLUA_BUILD_AS_DLL ' output='pb.dll' libs+='-llua53' */
+ * win32cc: flags+='-s -mdll -DLUA_BUILD_AS_DLL ' output='pb.dll' libs+='-llua54' */
 
