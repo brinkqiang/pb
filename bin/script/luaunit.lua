@@ -9,6 +9,8 @@ License: BSD License, see LICENSE.txt
 Version: 3.2
 ]]--
 
+package.path = "../script/?.lua;" .. package.path
+
 require("math")
 local M={}
 

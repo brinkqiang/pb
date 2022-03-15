@@ -1,3 +1,6 @@
+
+package.path = "../script/?.lua;" .. package.path
+
 local string = string
 local tonumber = tonumber
 local setmetatable = setmetatable

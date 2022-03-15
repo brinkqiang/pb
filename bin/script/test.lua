@@ -1,3 +1,6 @@
+
+package.path = "../script/?.lua;" .. package.path
+
 local lu = require "luaunit"
 
 local pb     = require "pb"
