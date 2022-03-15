@@ -11,6 +11,7 @@ local protoc = require "protoc"
 local eq       = lu.assertEquals
 local table_eq = lu.assertItemsEquals
 local fail     = lu.assertErrorMsgContains
+local is_true  = lu.assertIsTrue
 
 local types = 0
 for _ in pb.types() do
@@ -443,6 +444,27 @@ function _G.test_default()
    table_eq(dt.array, {})
 
    pb.option "no_default_values"
+   pb.option "encode_default_values"
+   pb.option "decode_default_array"
+   local dt = pb.decode("TestDefault", "")
+   eq(getmetatable(dt), nil)
+   table_eq(dt,{
+      array = {},
+   })
+   local chunk2, _ = pb.encode("TestDefault", {defaulted_int = 0,defaulted_bool = true})
+   local dt = pb.decode("TestDefault", chunk2)
+   eq(dt.defaulted_int, 0)
+   eq(dt.defaulted_bool, true)
+   eq(dt.defaulted_str, nil)
+   eq(dt.defaulted_num, nil)
+   eq(dt.color, nil)
+   eq(dt.bool1, nil)
+   eq(dt.bool2, nil)
+   table_eq(dt.array, {})
+
+   pb.option "no_encode_default_values"
+   pb.option "no_decode_default_array"
+   pb.option "no_default_values"
 
    pb.option "enum_as_name"
    pb.clear "TestDefault"
@@ -521,6 +543,9 @@ function _G.test_packed()
    check_msg(".TestPacked", data)
    fail("table expected at field 'packs', got boolean",
         function() pb.encode("TestPacked", { packs = true }) end)
+
+   local data = {packs = {}}
+   check_msg(".TestPacked", data, {})
 
    local hasEmpty
    for _, name in pb.types() do
@@ -663,10 +688,10 @@ function _G.test_oneof()
        }
    } ]]
    check_msg("TestOneof", {})
-   check_msg("TestOneof", { m1 = {} })
-   check_msg("TestOneof", { m2 = {} })
-   check_msg("TestOneof", { m3 = { value = 0 } })
-   check_msg("TestOneof", { m3 = { value = 10 } })
+   check_msg("TestOneof", { m1 = {}, body_oneof = "m1" })
+   check_msg("TestOneof", { m2 = {}, body_oneof = "m2" })
+   check_msg("TestOneof", { m3 = { value = 0 }, body_oneof = "m3" })
+   check_msg("TestOneof", { m3 = { value = 10 }, body_oneof = "m3" })
    pb.clear "TestOneof"
 
    check_load [[
@@ -681,12 +706,17 @@ function _G.test_oneof()
       TestOneof msg = 1;
    }
    ]]
-   check_msg("TestOneof", { foo = 0 })
-   check_msg("TestOneof", { bar = "" })
-   check_msg("TestOneof", { foo = 0, bar = "" })
-   check_msg("Outter", { msg = { foo = 0 }})
-   check_msg("Outter", { msg = { bar = "" }})
-   check_msg("Outter", { msg = { foo = 0, bar = "" }})
+
+   check_msg("TestOneof", { foo = 0, body = "foo" })
+   check_msg("TestOneof", { bar = "", body = "bar" })
+   local chunk = pb.encode("TestOneof", { foo = 0, bar = "" })
+   local data = pb.decode("TestOneof", chunk)
+   is_true(data.body == "foo" or data.body == "bar")
+   check_msg("Outter", { msg = { foo = 0, body = "foo" }})
+   check_msg("Outter", { msg = { bar = "", body = "bar" }})
+   local chunk = pb.encode("Outter", {msg = { foo = 0, bar = "" }})
+   local data = pb.decode("Outter", chunk)
+   is_true(data.msg.body == "foo" or data.msg.body == "bar")
    pb.clear "TestOneof"
    pb.clear "Outter"
 
@@ -699,12 +729,12 @@ function _G.test_oneof()
        }
    } ]]
 
-   check_msg("TestOneof", { name = "foo" })
-   check_msg("TestOneof", { value = 0 })
-   check_msg("TestOneof", { name = "foo", value = 0 })
+   check_msg("TestOneof", { name = "foo", test_oneof = "name" })
+   check_msg("TestOneof", { value = 0, test_oneof = "value" })
+   local chunk = pb.encode("TestOneof", { name = "foo", value = 0 })
+   local data = pb.decode("TestOneof", chunk)
+   is_true(data.test_oneof == "name" or data.test_oneof == "value")
 
-   local data = { name = "foo", value = 5 }
-   check_msg("TestOneof", data)
    eq(pb.field("TestOneof", "name"), "name")
    pb.clear("TestOneof", "name")
    eq(pb.field("TestOneof", "name"), nil)
@@ -1218,6 +1248,76 @@ function _G.test_hook()
    assert(res.contacts[2].hooked)
    assert(type(res.contacts[1].type) == "table")
    assert(type(res.contacts[2].type) == "table")
+   end)
+end
+
+function _G.test_encode_hook()
+   withstate(function()
+   protoc.reload()
+   check_load [[
+      enum Type {
+         HOME = 1;
+         WORK = 2;
+      }
+      message Phone {
+         optional string name        = 1;
+         optional int64  phonenumber = 2;
+         optional Type   type        = 3;
+      }
+      message Person {
+         optional string name     = 1;
+         optional int32  age      = 2;
+         optional string address  = 3;
+         repeated Phone  contacts = 4;
+      } ]]
+   pb.option "enable_hooks"
+   assert(pb.encode_hook "Phone" == nil)
+   fail("function expected, got boolean",
+        function() pb.encode_hook("Phone", true) end)
+   fail("type not found",
+      function() pb.encode_hook "-invalid-type-" end)
+   local function make_encode_hook(name, func)
+      local fetch = pb.encode_hook(name)
+      local function helper(t)
+         return func(name, t)
+      end
+      local oldh = pb.encode_hook(name, helper)
+      assert(fetch == oldh)
+      assert(pb.encode_hook(name) == helper)
+   end
+   local s = {}
+   make_encode_hook("Person", function(name, t)
+      s[#s+1] = ("(%s|%s)"):format(name, t.name)
+      return t
+   end)
+   make_encode_hook("Phone", function(name, ph)
+      ph_name, ty, num = ph:match("(%w+)|(%w+)|(%d+)")
+      t = {
+         name = ph_name,
+         type = ty,
+         phonenumber = tonumber(num),
+      }
+      s[#s+1] = ("(%s|%s|%s)"):format(name, t.name, t.phonenumber)
+      return t
+   end)
+   make_encode_hook("Type", function(name, v)
+      local t = v:lower() == v and "HOME" or "WORK"
+      s[#s+1] = ("(%s|(%s)%s)"):format(name, v, t)
+      return t
+   end)
+   local data = {
+      name = "ilse",
+      age  = 18,
+      contacts = {
+         "alice|zzz|12312341234",
+         "bob|Grr|45645674567",
+      }
+   }
+   local res = pb.decode("Person", pb.encode("Person", data))
+   s = table.concat(s)
+   assert(s == "(Person|ilse)(Phone|alice|12312341234)"..
+          "(Type|(zzz)HOME)(Phone|bob|45645674567)"..
+         "(Type|(Grr)WORK)")
    end)
 end
 
