@@ -10,7 +10,8 @@
             "request": "launch",
             "stopOnEntry": true,
             "runtimeExecutable": "${workspaceFolder}/bin/debug/lua.exe",
-            "runtimeArgs": "../script/test.lua",
+            "runtimeArgs": "../script/testproto.lua",
+            "cwd" : "${workspaceFolder}/bin/debug",
             "consoleCoding": "utf8"
         }
     ]

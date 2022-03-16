@@ -1,0 +1,40 @@
+// See README.txt for information and build instructions.
+//
+// Note: START and END tags are used in comments to define sections used in
+// tutorials.  They are not part of the syntax for Protocol Buffers.
+//
+// To get an in-depth walkthrough of this file and the related examples, see:
+// https://developers.google.com/protocol-buffers/docs/tutorials
+
+// [START declaration]
+syntax = "proto3";
+
+package net;
+// [START enums]
+
+enum PhoneType {
+MOBILE = 0;
+HOME = 1;
+WORK = 2;
+}
+// [END enums]
+
+// [START messages]
+message tb_JobInfo {
+  uint32 job_type = 1;
+  string job_desc = 2;  
+}
+
+message tb_Person {
+  string number = 1;
+  string email = 2;
+  uint32 age = 3;
+
+  PhoneType ptype = 4;
+  repeated string desc = 5;
+  repeated tb_JobInfo jobs = 6;
+
+  uint64 timex = 7;
+
+}
+// [END messages]
