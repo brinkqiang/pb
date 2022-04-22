@@ -33,8 +33,5 @@ message tb_Person {
   PhoneType ptype = 4;
   repeated string desc = 5;
   repeated tb_JobInfo jobs = 6;
-
-  uint64 timex = 7;
-
 }
 // [END messages]

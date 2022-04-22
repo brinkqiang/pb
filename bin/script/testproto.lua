@@ -33,8 +33,12 @@ local message = {
    email = "13615632545@163.com",
    age = 28,
    ptype = "WORK",
-   desc = {"first", "second", "three"}
+   desc = {"first", "second", "three"},
+   jobs = {{job_type=1, job_desc="dog"}, {job_type=2, job_desc="cat"}}
 }
 
 local buf = pb.encode("net.tb_Person", message)
-print(buf)
+
+local msg = pb.decode("net.tb_Person", buf)
+
+table_eq(message, msg)
