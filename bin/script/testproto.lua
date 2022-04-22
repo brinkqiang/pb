@@ -16,29 +16,38 @@ local table_eq = lu.assertItemsEquals
 local fail     = lu.assertErrorMsgContains
 local is_true  = lu.assertIsTrue
 
-local function check_load(chunk, name)
-    local pbdata = protoc.new():compile(chunk, name)
-    local ret, offset = pb.load(pbdata)
-    if not ret then
-       error("load error at "..offset..
-             "\nproto: "..chunk..
-             "\ndata: "..buffer(pbdata):tohex())
-    end
- end
+function _G.test()
+   local function check_load(chunk, name)
+      local pbdata = protoc.new():compile(chunk, name)
+      local ret, offset = pb.load(pbdata)
+      if not ret then
+         error("load error at "..offset..
+               "\nproto: "..chunk..
+               "\ndata: "..buffer(pbdata):tohex())
+      end
+   end
+  
+  check_load(pbio.read("../proto/net.proto"), "../proto/net.proto")
+  
+  local message = {
+     number = "13615632545",
+     email = "13615632545@163.com",
+     age = 28,
+     ptype = "WORK",
+     desc = {"first", "second", "three"},
+     jobs = {{job_type=1, job_desc="dog"}, {job_type=2, job_desc="cat"}}
+  }
+  
+  local buf = pb.encode("net.tb_Person", message)
+  
+  local msg = pb.decode("net.tb_Person", buf)
+  
+  table_eq(message, msg)
+end
 
-check_load(pbio.read("../proto/net.proto"), "../proto/net.proto")
 
-local message = {
-   number = "13615632545",
-   email = "13615632545@163.com",
-   age = 28,
-   ptype = "WORK",
-   desc = {"first", "second", "three"},
-   jobs = {{job_type=1, job_desc="dog"}, {job_type=2, job_desc="cat"}}
-}
-
-local buf = pb.encode("net.tb_Person", message)
-
-local msg = pb.decode("net.tb_Person", buf)
-
-table_eq(message, msg)
+if _VERSION == "Lua 5.1" and not _G.jit then
+   lu.LuaUnit.run()
+else
+   os.exit(lu.LuaUnit.run(), true)
+end
