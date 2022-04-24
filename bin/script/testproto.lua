@@ -16,6 +16,8 @@ local table_eq = lu.assertItemsEquals
 local fail     = lu.assertErrorMsgContains
 local is_true  = lu.assertIsTrue
 
+protoc.proto3_optional = true
+
 function _G.test()
    local function check_load(chunk, name)
       local pbdata = protoc.new():compile(chunk, name)
@@ -35,7 +37,8 @@ function _G.test()
      age = 28,
      ptype = "WORK",
      desc = {"first", "second", "three"},
-     jobs = {{job_type=1, job_desc="dog"}, {job_type=2, job_desc="cat"}}
+     jobs = {{job_type=1, job_desc="dog"}, {job_type=2, job_desc="cat"}},
+     optional_age="age"
   }
   
   local buf = pb.encode("net.tb_Person", message)
