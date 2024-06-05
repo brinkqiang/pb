@@ -10,16 +10,16 @@ Copyright (c) 2013-2018 brinkqiang (brink.qiang@gmail.com)
 [![GitHub forks](https://img.shields.io/github/forks/brinkqiang/pb.svg?label=Fork)](https://github.com/brinkqiang/pb)
 
 ## Build status
-| [Linux][lin-link] | [MacOSX][osx-link] | [Windows][win-link] |
+| [Linux][lin-link] | [Mac][mac-link] | [Windows][win-link] |
 | :---------------: | :----------------: | :-----------------: |
-| ![lin-badge]      | ![osx-badge]       | ![win-badge]        |
+| ![lin-badge]      | ![mac-badge]       | ![win-badge]        |
 
-[lin-badge]: https://travis-ci.org/brinkqiang/pb.svg?branch=master "Travis build status"
-[lin-link]:  https://travis-ci.org/brinkqiang/pb "Travis build status"
-[osx-badge]: https://travis-ci.org/brinkqiang/pb.svg?branch=master "Travis build status"
-[osx-link]:  https://travis-ci.org/brinkqiang/pb "Travis build status"
-[win-badge]: https://ci.appveyor.com/api/projects/status/github/brinkqiang/pb?branch=master&svg=true "AppVeyor build status"
-[win-link]:  https://ci.appveyor.com/project/brinkqiang/pb "AppVeyor build status"
+[lin-badge]: https://github.com/brinkqiang/pb/workflows/linux/badge.svg "linux build status"
+[lin-link]:  https://github.com/brinkqiang/pb/actions/workflows/linux.yml "linux build status"
+[mac-badge]: https://github.com/brinkqiang/pb/workflows/mac/badge.svg "mac build status"
+[mac-link]:  https://github.com/brinkqiang/pb/actions/workflows/mac.yml "mac build status"
+[win-badge]: https://github.com/brinkqiang/pb/workflows/win/badge.svg "win build status"
+[win-link]:  https://github.com/brinkqiang/pb/actions/workflows/win.yml "win build status"
 
 ## env
 install cmake 3.8+
