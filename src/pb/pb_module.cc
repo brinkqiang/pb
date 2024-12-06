@@ -22,9 +22,23 @@
 #include "pb_module.h"
 #include "pb.h"
 
+#if LUA_VERSION_NUM == 501
+LUALIB_API void luaL_requiref(lua_State *L, const char *modname,
+                              lua_CFunction openf, int glb) {
+    lua_pushcfunction(L, openf);        // 将模块的打开函数压入栈
+    lua_pushstring(L, modname);        // 将模块名压入栈
+    lua_call(L, 1, 1);                 // 调用打开函数，返回模块表
+
+    if (glb) {                         // 只有当 glb 为真时才设置为全局变量
+        lua_pushvalue(L, -1);          // 将模块表复制到栈顶
+        lua_setglobal(L, modname);     // 设置为全局变量
+    }
+}
+#endif
 LUALIB_API int require_pb(lua_State* L)
 {
     luaL_requiref(L, "pb", luaopen_pb, 0);
+
     printf("lua module: require pb\n");
     return 1;
 }
